@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشكاة - الخدمات</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e8e2f0 0%, #d4c5e8 100%);
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .app-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #5a4a6b;
+            margin-bottom: 5px;
+        }
+
+        .tagline {
+            font-size: 10px;
+            color: #7a6b8a;
+        }
+
+        .search-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .search-bar {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #c4b5d4;
+            border-radius: 25px;
+            background: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .language-btn {
+            padding: 12px 20px;
+            background: #c4b5d4;
+            border: none;
+            border-radius: 25px;
+            color: #5a4a6b;
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 2px solid #c4b5d4;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(139, 90, 150, 0.2);
+            min-width: 120px;
+            z-index: 1000;
+            display: none;
+            margin-top: 5px;
+        }
+
+        .language-dropdown.show {
+            display: block;
+        }
+
+        .language-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #5a4a6b;
+        }
+
+        .language-option:last-child {
+            border-bottom: none;
+        }
+
+        .language-option:hover {
+            background: #f8f5fb;
+        }
+
+        .language-option.active {
+            background: #8b5a96;
+            color: white;
+        }
+
+        .language-btn-container {
+            position: relative;
+        }
+
+        .services-container {
+            margin-bottom: 30px;
+        }
+
+        .services-scroll {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .services-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .service-item {
+            min-width: 120px;
+            height: 50px;
+            background: #8b5a96;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(139, 90, 150, 0.3);
+        }
+
+        .service-item:hover {
+            background: #9d6ba8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(139, 90, 150, 0.4);
+        }
+
+        .service-item.active {
+            background: #6b4c75;
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(139, 90, 150, 0.5);
+        }
+
+        .service-text {
+            font-size: 12px;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .service-icon {
+            font-size: 18px;
+            margin-left: 8px;
+        }
+
+        .scroll-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #7a6b8a;
+            font-size: 12px;
+        }
+
+        .map-section {
+            margin-top: 20px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(139, 90, 150, 0.2);
+        }
+
+        .map-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn, .control-select {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            color: #5a4a6b;
+            border: 2px solid #8b5a96;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover, .control-select:hover {
+            background: #9d6ba8;
+            transform: translateY(-2px);
+        }
+
+        .control-select {
+            background: white;
+            color: #5a4a6b;
+            border: 2px solid #8b5a96;
+        }
+
+        #map {
+            width: 100%;
+            height: 450px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(139, 90, 150, 0.2);
+            margin-bottom: 20px;
+        }
+
+        #lists {
+            background: #f8f5fb;
+            border-radius: 16px;
+            padding: 20px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        #lists details {
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        #lists summary {
+            padding: 15px;
+            background: #8b5a96;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            min-height: 44px;
+            background: white;
+        }
+
+        .list-item:hover {
+            background: #f8f5fb;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .item-dist {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .cat-count {
+            background: #c4b5d4;
+            color: #5a4a6b;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 375px) {
+            .map-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            #map {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="LOGO2.png" alt="مشكاة" class="logo">
+        </div>
+
+        <div class="search-section">
+            <input type="text" class="search-bar" placeholder="البحث...">
+            <div class="language-btn-container">
+                <button class="language-btn" onclick="toggleLanguageDropdown()">
+                    🌐 اللغات
+                </button>
+                <div class="language-dropdown" id="languageDropdown">
+                    <div class="language-option active" onclick="selectLanguage('ar', 'العربية')">العربية</div>
+                    <div class="language-option" onclick="selectLanguage('en', 'English')">English</div>
+                    <div class="language-option" onclick="selectLanguage('ur', 'اردو')">اردو</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="services-container">
+            <div class="services-scroll">
+                <div class="service-item" onclick="selectService('coffee')">
+                    <span class="service-text">المقاهي</span>
+                    <img src="11.png" alt="مقهى" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('discount')">
+                    <span class="service-text">العروض</span>
+                    <img src="9.png" alt="العروض" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('restroom')">
+                    <span class="service-text">دورات المياه</span>
+                    <img src="17.png" alt="دورات مياه" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('water')">
+                    <span class="service-text">مياه زمزم</span>
+                    <img src="6.png" alt="مياه زمزم" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('atm')">
+                    <span class="service-text">الصرافات</span>
+                    <img src="8.png" alt="صراف" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('restaurant')">
+                    <span class="service-text">المطاعم</span>
+                    <img src="13.png" alt="مطعم" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('pharmacy')">
+                    <span class="service-text">الصيدليات</span>
+                    <img src="7.png" alt="صيدلية" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('hotel')">
+                    <span class="service-text">الفنادق</span>
+                    <img src="12.png" alt="فنادق" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('shopping')">
+                    <span class="service-text">التسوق</span>
+                    <img src="16.png" alt="تسوق" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('transport')">
+                    <span class="service-text">البقالة</span>
+                    <img src="14.png" alt="بقالة" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('medical')">
+                    <span class="service-text">الطوارئ</span>
+                    <img src="15.png" alt="مستشفى" class="services-scroll">
+                </div>
+                <div class="service-item" onclick="selectService('prayer')">
+                    <span class="service-text">أوقات الصلاة</span>
+                    <img src="10.png" alt="أوقات الصلاة" class="services-scroll">
+                </div>
+            </div>
+            <div class="scroll-indicator">← مرر لرؤية المزيد →</div>
+        </div>
+
+        <div class="map-section">
+            <div class="map-controls">
+                <button class="control-btn" id="speech-toggle">🔊 وصف الطريق</button>
+                <button class="control-btn" id="voice-btn">🎤 تحدث بصوتك</button>
+            </div>
+
+            <div id="map"></div>
+            <div id="lists"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <script>
+        const categories = {
+            "المطاعم": {
+                filter:'amenity=restaurant', 
+                icon:'🍽️',
+                customLocations: [
+                    {
+                        name: "ماك - تحت برج الساعة",
+                        lat: 21.4191392,
+                        lon: 39.8246381,
+                        type: "McDonald's Restaurant",
+                        address: "تحت برج الساعة، مكة المكرمة",
+                        hours: "24 ساعة",
+                        services: ["وجبات سريعة", "إفطار", "مشروبات", "حلويات", "وجبات أطفال"]
+                    },
+                    {
+                        name: "البيك - تحت فندق وأبراج مكة",
+                        lat: 21.4189055,
+                        lon: 39.8246649,
+                        type: "Al Baik Restaurant",
+                        address: "تحت فندق وأبراج مكة، مكة المكرمة",
+                        hours: "من 11 صباحاً إلى 2 صباحاً",
+                        services: ["دجاج مقلي", "برجر", "مشروبات", "وجبات عائلية", "صوص البيك الخاص"]
+                    }
+                ]
+            },
+            "الصرافات": {
+                filter:'amenity=atm', 
+                icon:'🏧', 
+                customLocations: [
+                    {
+                        name: "صراف الأهلي - برج الساعة",
+                        lat: 21.4189847,
+                        lon: 39.8250738,
+                        type: "Al Ahli Bank ATM",
+                        address: "برج الساعة، مكة المكرمة",
+                        hours: "24 ساعة",
+                        services: ["سحب نقدي", "استعلام رصيد", "تحويل أموال"]
+                    },
+                    {
+                        name: "شركة معيوض الجميعي للصرافة رقم١",
+                        lat: 21.4189446,
+                        lon: 39.8251071,
+                        type: "Maayouf Al-Jumaie Exchange",
+                        address: "برج الساعة، مكة المكرمة",
+                        hours: "من 8 صباحاً إلى 12 منتصف الليل",
+                        services: ["تحويل عملات", "صرف عملات أجنبية", "حوالات مالية", "خدمات مصرفية"]
+                    }
+                ]
+            },
+            "الصيدليات": {
+                filter:'amenity=pharmacy', 
+                icon:'💊',
+                customLocations: [
+                    {
+                        name: "صيدلية زهرة الروضة",
+                        lat: 21.4191656,
+                        lon: 39.8247227,
+                        type: "Zahrat Al-Rawda Pharmacy",
+                        address: "تحت فندق وأبراج مكة، مكة المكرمة",
+                        hours: "من 8 صباحاً إلى 12 منتصف الليل",
+                        services: ["أدوية", "مستحضرات تجميل", "فيتامينات", "أدوية بدون وصفة", "مستلزمات طبية"]
+                    }
+                ]
+            },
+            "المستشفيات": {filter:'amenity=hospital', icon:'🏥'},
+            "المحلات": {filter:'shop=*', icon:'🛍️'},
+            "المقاهي": {filter:'amenity=cafe', icon:'☕'},
+            "دورات المياه": {filter:'amenity=toilets', icon:'🚻'},
+            "الفنادق": {filter:'tourism=hotel', icon:'🏨'},
+            "البقالة": {
+                filter:'shop=supermarket', 
+                icon:'🛒', 
+                customLocations: [
+                    {
+                        name: "سوبرماركت بن داوود - برج الساعة",
+                        lat: 21.4191089,
+                        lon: 39.8247096,
+                        type: "Bin Dawood Supermarket",
+                        address: "برج الساعة، مكة المكرمة",
+                        hours: "من 6 صباحاً إلى 2 صباحاً",
+                        services: ["مواد غذائية", "منتجات طازجة", "مخبوزات", "منتجات منزلية", "أدوات شخصية"]
+                    }
+                ]
+            }
+        };
+
+        let userLocation = [21.4225,39.8262];
+        let speechEnabled = true;
+        let lang = "ar-SA";
+        let map, userMarker, routingControl;
+        let allPlaces = [];
+
+        function initMap() {
+            map = L.map('map', {
+                zoomControl: true,
+                attributionControl: false,
+                tap: true,
+                touchZoom: true,
+                doubleClickZoom: true
+            }).setView(userLocation, 16);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                attribution:'&copy; OpenStreetMap contributors' 
+            }).addTo(map);
+
+            userMarker = L.marker(userLocation).addTo(map).bindPopup("موقعك الحالي").openPopup();
+
+            navigator.geolocation.getCurrentPosition(pos => {
+                userLocation = [pos.coords.latitude, pos.coords.longitude];
+                userMarker.setLatLng(userLocation).bindPopup("موقعك الحالي");
+                map.setView(userLocation, 16);
+                loadPlaces(userLocation[0], userLocation[1]);
+            }, () => {
+                loadPlaces(userLocation[0], userLocation[1]);
+            });
+        }
+
+        function selectService(serviceType) {
+            document.querySelectorAll('.service-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            event.target.closest('.service-item').classList.add('active');
+            
+            const serviceName = getServiceName(serviceType);
+            if (categories[serviceName]) {
+                loadSpecificService(serviceName);
+                
+                // مسح العلامات السابقة
+                map.eachLayer(function (layer) {
+                    if (layer instanceof L.Marker && layer !== userMarker) {
+                        map.removeLayer(layer);
+                    }
+                });
+            }
+        }
+
+        function loadSpecificService(serviceName) {
+            const listsDiv = document.getElementById("lists");
+            listsDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #8b5a96;">جاري التحميل...</div>';
+            
+            const cat = categories[serviceName];
+            if (!cat) return;
+            
+            let allElements = [];
+            
+            // إضافة المواقع المخصصة أولاً (مثل صراف الأهلي)
+            if (cat.customLocations) {
+                cat.customLocations.forEach(location => {
+                    const dist = calcDistance(userLocation[0], userLocation[1], location.lat, location.lon);
+                    allElements.push({
+                        lat: location.lat,
+                        lon: location.lon,
+                        tags: { name: location.name },
+                        distance: dist,
+                        isCustom: true,
+                        customData: location
+                    });
+                });
+            }
+            
+            // جلب البيانات من OpenStreetMap
+            const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node[${cat.filter}](around:1500,${userLocation[0]},${userLocation[1]});out;`;
+            
+            fetch(overpassUrl)
+                .then(res => res.json())
+                .then(data => {
+                    // إضافة البيانات من OpenStreetMap
+                    data.elements.forEach(el => {
+                        const dist = calcDistance(userLocation[0], userLocation[1], el.lat, el.lon);
+                        allElements.push({ ...el, distance: dist, isCustom: false });
+                    });
+                    
+                    // ترتيب حسب المسافة
+                    allElements.sort((a, b) => a.distance - b.distance);
+                    
+                    let html = `<details open><summary>${cat.icon} ${serviceName} <span class="cat-count">${allElements.length}</span></summary>`;
+                    
+                    allElements.forEach(el => {
+                        const placeLat = el.lat;
+                        const placeLon = el.lon;
+                        let placeName = el.tags.name || "بدون اسم";
+                        const dist = el.distance.toFixed(2);
+                        
+                        // إنشاء العلامة على الخريطة
+                        const marker = L.marker([placeLat, placeLon]).addTo(map);
+                        
+                        // إنشاء النافذة المنبثقة
+                        let popupContent;
+                        if (el.isCustom && el.customData) {
+                            popupContent = `
+                                <div style="text-align: center; min-width: 200px;">
+                                    <h3 style="color: #8b5cf6; margin-bottom: 10px;">${placeName}</h3>
+                                    <p style="margin: 5px 0;"><strong>العنوان:</strong> ${el.customData.address}</p>
+                                    <p style="margin: 5px 0;"><strong>ساعات العمل:</strong> ${el.customData.hours}</p>
+                                    <p style="margin: 5px 0;"><strong>المسافة:</strong> ${dist} كم</p>
+                                    <div style="margin-top: 10px;">
+                                        <strong>الخدمات:</strong><br>
+                                        ${el.customData.services.map(service => `• ${service}`).join('<br>')}
+                                    </div>
+                                    <button onclick="getDirections(${placeLat}, ${placeLon}, '${placeName}')" 
+                                            style="background: #8b5cf6; color: white; border: none; padding: 8px 16px; border-radius: 8px; margin-top: 10px; cursor: pointer;">
+                                        احصل على الاتجاهات
+                                    </button>
+                                </div>
+                            `;
+                        } else {
+                            popupContent = `${placeName}<br>${dist} كم`;
+                        }
+                        
+                        marker.bindPopup(popupContent);
+                        
+                        html += `<div class="list-item" onclick="focusPlace(${placeLat},${placeLon},'${placeName}')">
+                                  <span class="item-name">
+                                    <span class="icon">${cat.icon}</span>
+                                    ${placeName}
+                                  </span>
+                                  <span class="item-dist">${dist} كم</span>
+                                </div>`;
+                    });
+                    
+                    html += "</details>";
+                    listsDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('خطأ في تحميل البيانات:', error);
+                    listsDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #d32f2f;">خطأ في تحميل البيانات</div>';
+                });
+        }
+
+        function getDirections(lat, lon, name) {
+            if(routingControl) map.removeControl(routingControl);
+            routingControl = L.Routing.control({
+                waypoints: [L.latLng(userLocation[0], userLocation[1]), L.latLng(lat, lon)],
+                lineOptions: {styles: [{color: '#8b5cf6', opacity: 0.8, weight: 5}]},
+                addWaypoints: false,
+                draggableWaypoints: false,
+                routeWhileDragging: false,
+                showAlternatives: false,
+                createMarker: () => null
+            }).addTo(map);
+
+            map.setView([lat, lon], 17);
+            speak(`تم تحديد الطريق إلى ${name}`);
+        }
+
+        function getServiceName(serviceType) {
+            const serviceNames = {
+                'coffee': 'المقاهي',
+                'discount': 'العروض',
+                'restroom': 'دورات المياه',
+                'water': 'مياه زمزم',
+                'atm': 'الصرافات',
+                'restaurant': 'المطاعم',
+                'pharmacy': 'الصيدليات',
+                'hotel': 'الفنادق',
+                'shopping': 'التسوق',
+                'transport': 'البقالة',
+                'medical': 'الطوارئ',
+                'prayer': 'أوقات الصلاة'
+            };
+            return serviceNames[serviceType] || serviceType;
+        }
+
+        function toggleLanguageDropdown() {
+            const dropdown = document.getElementById('languageDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function selectLanguage(langCode, langName) {
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            
+            const btn = document.querySelector('.language-btn');
+            btn.innerHTML = `🌐 ${langName}`;
+            
+            document.getElementById('languageDropdown').classList.remove('show');
+            
+            lang = langCode === 'ar' ? 'ar-SA' : langCode === 'en' ? 'en-US' : 'ur-PK';
+        }
+
+        document.addEventListener('click', function(event) {
+            const container = document.querySelector('.language-btn-container');
+            if (!container.contains(event.target)) {
+                document.getElementById('languageDropdown').classList.remove('show');
+            }
+        });
+
+
+        function loadPlaces(lat, lon) {
+            const listsDiv = document.getElementById("lists");
+            listsDiv.innerHTML = "";
+            allPlaces = [];
+            
+            for(const [name, cat] of Object.entries(categories)) {
+                const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node[${cat.filter}](around:1500,${lat},${lon});out;`;
+                
+                fetch(overpassUrl)
+                    .then(res => res.json())
+                    .then(data => {
+                        let html = `<details><summary>${cat.icon} ${name} <span class="cat-count">${data.elements.length}</span></summary>`;
+                        
+                        data.elements.forEach((el, index) => {
+                            const placeLat = el.lat;
+                            const placeLon = el.lon;
+                            let placeName = el.tags.name || "بدون اسم";
+                            
+                            allPlaces.push({name: placeName, lat: placeLat, lon: placeLon});
+                            
+                            const dist = calcDistance(userLocation[0], userLocation[1], placeLat, placeLon).toFixed(2);
+                            
+                            L.marker([placeLat, placeLon]).addTo(map).bindPopup(`${placeName}<br>${dist} كم`);
+                            
+                            html += `<div class="list-item" onclick="focusPlace(${placeLat},${placeLon},'${placeName}')">
+                                      <span class="item-name">
+                                        <span class="icon">${cat.icon}</span>
+                                        ${placeName}
+                                      </span>
+                                      <span class="item-dist">${dist} كم</span>
+                                    </div>`;
+                        });
+                        html += "</details>";
+                        listsDiv.innerHTML += html;
+                    });
+            }
+        }
+
+        function focusPlace(lat, lon, name) {
+            map.setView([lat, lon], 18);
+            L.popup().setLatLng([lat, lon]).setContent(name).openOn(map);
+            speak(name);
+
+            if(!speechEnabled) return;
+
+            if(routingControl) map.removeControl(routingControl);
+            routingControl = L.Routing.control({
+                waypoints: [L.latLng(userLocation[0], userLocation[1]), L.latLng(lat, lon)],
+                lineOptions: {styles: [{color: '#8b5a96', opacity: 0.8, weight: 5}]},
+                addWaypoints: false,
+                draggableWaypoints: false,
+                routeWhileDragging: false,
+                showAlternatives: false,
+                createMarker: () => null
+            }).addTo(map);
+
+            describeRoute(userLocation, [lat, lon], name);
+        }
+
+        function describeRoute(start, end, placeName) {
+            const latDiff = end[0] - start[0];
+            const lonDiff = end[1] - start[1];
+            let text = `اتجه من موقعك الحالي إلى ${placeName}. `;
+            text += Math.abs(latDiff) > Math.abs(lonDiff) ? (latDiff > 0 ? "تحرك شمالاً. " : "تحرك جنوباً. ") : (lonDiff > 0 ? "تحرك شرقاً. " : "تحرك غرباً. ");
+            speak(text);
+        }
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            speechSynthesis.speak(utterance);
+        }
+
+        function calcDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        document.getElementById("speech-toggle").addEventListener("click", () => {
+            speechEnabled = !speechEnabled;
+            const btn = document.getElementById("speech-toggle");
+            btn.innerHTML = speechEnabled ? "🔊 وصف الطريق" : "🔇 إيقاف الوصف";
+            btn.style.background = speechEnabled ? "#8b5a96" : "#999";
+        });
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = lang;
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        document.getElementById("voice-btn").addEventListener("click", () => {
+            recognition.lang = lang;
+            recognition.start();
+        });
+
+        recognition.onresult = function(event) {
+            const speech = event.results[0][0].transcript.toLowerCase();
+            let found = allPlaces.find(p => p.name.toLowerCase().includes(speech));
+            if(found) {
+                focusPlace(found.lat, found.lon, found.name);
+            } else {
+                speak("المكان غير موجود");
+            }
+        }
+
+
+        window.addEventListener('load', () => {
+            initMap();
+        });
+    </script>
+</body>
+</html>
